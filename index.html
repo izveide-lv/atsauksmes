@@ -26,29 +26,29 @@
 
       <div class="flex mb-4">
         <span
-          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          class="star text-yellow-500 text-3xl cursor-pointer"
           data-value="1"
-          >★</span
+          >☆</span
         >
         <span
-          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          class="star text-yellow-500 text-3xl cursor-pointer"
           data-value="2"
-          >★</span
+          >☆</span
         >
         <span
-          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          class="star text-yellow-500 text-3xl cursor-pointer"
           data-value="3"
-          >★</span
+          >☆</span
         >
         <span
-          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          class="star text-yellow-500 text-3xl cursor-pointer"
           data-value="4"
-          >★</span
+          >☆</span
         >
         <span
-          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          class="star text-yellow-500 text-3xl cursor-pointer"
           data-value="5"
-          >★</span
+          >☆</span
         >
       </div>
 
@@ -115,14 +115,7 @@
 
       function highlightStars(value) {
         stars.forEach((star) => {
-          star.classList.toggle(
-            "opacity-100",
-            star.getAttribute("data-value") <= value
-          );
-          star.classList.toggle(
-            "opacity-50",
-            star.getAttribute("data-value") > value
-          );
+          star.innerText = star.getAttribute("data-value") <= value ? "★" : "☆";
         });
       }
 
