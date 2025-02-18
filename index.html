@@ -18,11 +18,9 @@
       }
     </style>
   </head>
-  <body class="p-10">
+  <body class="p-4">
     <div class="max-w-2xl mx-auto bg-white p-4 rounded-lg shadow-lg">
-      <h2 class="text-2xl font-bold mb-4" id="reviewTitle">
-        Atstājiet atsauksmi
-      </h2>
+      <h2 class="text-2xl font-bold mb-4" id="reviewTitle">Atsauksmes</h2>
 
       <div class="flex mb-4">
         <span
@@ -92,7 +90,7 @@
       const sanitizedWebsite = sanitizeString(website ? website : "latvija.ai");
       document.getElementById(
         "reviewTitle"
-      ).innerText = `Atstājiet atsauksmi par ${sanitizedWebsite}`;
+      ).innerText = `Atsauksmes par ${sanitizedWebsite}`;
 
       const stars = document.querySelectorAll(".star");
       let rating = 0;
