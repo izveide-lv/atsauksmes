@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="lv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atsauksmju lapa</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      .star {
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .star:hover {
+        transform: scale(1.2);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 p-10">
+    <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-lg">
+      <h2 class="text-2xl font-bold mb-4" id="reviewTitle">
+        Atstājiet atsauksmi
+      </h2>
+
+      <div class="flex mb-4">
+        <span
+          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          data-value="1"
+          >★</span
+        >
+        <span
+          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          data-value="2"
+          >★</span
+        >
+        <span
+          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          data-value="3"
+          >★</span
+        >
+        <span
+          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          data-value="4"
+          >★</span
+        >
+        <span
+          class="star text-yellow-500 opacity-50 text-3xl cursor-pointer"
+          data-value="5"
+          >★</span
+        >
+      </div>
+
+      <textarea
+        id="reviewText"
+        class="w-full p-2 border border-gray-300 rounded mb-4 shadow-md"
+        rows="4"
+        placeholder="Uzrakstiet savu atsauksmi..."
+      ></textarea>
+
+      <button
+        id="submitReview"
+        class="text-white bg-red-900 hover:bg-red-800 focus:ring-4 focus:ring-red-900 focus:outline-none font-medium rounded-lg text-sm px-4 py-2 text-center transition-all"
+      >
+        Iesniegt atsauksmi
+      </button>
+
+      <div id="reviews" class="mt-6">
+        <h3 class="text-lg font-semibold">Atsauksmes</h3>
+        <ul id="reviewList" class="list-disc pl-5"></ul>
+      </div>
+    </div>
+
+    <script>
+      // Funkcija, kas sanitizē ievadi, lai novērstu XSS
+      function sanitizeString(str) {
+        const div = document.createElement("div");
+        div.innerText = str.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+        return div.innerHTML;
+      }
+
+      // Funkcija, lai iegūtu URL parametrus
+      function getUrlParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+      }
+
+      // Iegūstiet vietnes URL parametru un parādiet to
+      const website = getUrlParameter("url");
+      const sanitizedWebsite = sanitizeString(website ? website : "latvija.ai");
+      document.getElementById(
+        "reviewTitle"
+      ).innerText = `Atstājiet atsauksmi par ${sanitizedWebsite}`;
+
+      const stars = document.querySelectorAll(".star");
+      let rating = 0;
+
+      stars.forEach((star) => {
+        star.addEventListener("mouseover", () => {
+          const value = star.getAttribute("data-value");
+          highlightStars(value);
+        });
+
+        star.addEventListener("mouseout", () => {
+          highlightStars(rating);
+        });
+
+        star.addEventListener("click", () => {
+          rating = parseInt(star.getAttribute("data-value"), 10); // Nodrošiniet, ka vērtējums ir vesels skaitlis
+          highlightStars(rating);
+        });
+      });
+
+      function highlightStars(value) {
+        stars.forEach((star) => {
+          star.classList.toggle(
+            "opacity-100",
+            star.getAttribute("data-value") <= value
+          );
+          star.classList.toggle(
+            "opacity-50",
+            star.getAttribute("data-value") > value
+          );
+        });
+      }
+
+      function renderStars(rating) {
+        let starsHtml = "";
+        for (let i = 1; i <= 5; i++) {
+          starsHtml += `<span class="text-yellow-500 text-xl">${
+            i <= rating ? "★" : "☆"
+          }</span>`;
+        }
+        return starsHtml;
+      }
+
+      // Funkcija, lai iegūtu un parādītu atsauksmes konkrētai vietnei
+      async function fetchReviews(websiteUrl) {
+        if (!websiteUrl) {
+          websiteUrl = "latvija.ai";
+        }
+        try {
+          const response = await fetch(
+            `https://api.izveide.lv/atsauksmes?url=${encodeURIComponent(
+              websiteUrl
+            )}`
+          );
+          const reviews = await response.json();
+          const reviewList = document.getElementById("reviewList");
+          reviewList.innerHTML = ""; // Notīrīt esošās atsauksmes
+          if (reviews.length) {
+            reviews.forEach((review) => {
+              const newReview = document.createElement("li");
+              newReview.innerHTML = `${renderStars(
+                review.rating
+              )} — ${sanitizeString(review.text)}`; // Sanitizēt atsauksmes tekstu
+              newReview.classList.add("mb-2");
+              reviewList.appendChild(newReview);
+            });
+          } else {
+            reviewList.innerHTML = "";
+          }
+        } catch (error) {
+          console.error("Kļūda, iegūstot atsauksmes:", error);
+        }
+      }
+
+      document
+        .getElementById("submitReview")
+        .addEventListener("click", async () => {
+          const reviewText = document.getElementById("reviewText").value;
+          if (reviewText && rating) {
+            const sanitizedReviewText = sanitizeString(reviewText); // Sanitizēt atsauksmes tekstu
+            const reviewData = {
+              rating: rating, // Vērtējums jau ir skaitlis
+              text: sanitizedReviewText,
+              website: sanitizedWebsite, // Iekļaut vietni atsauksmju datos
+            };
+
+            try {
+              const response = await fetch(
+                "https://api.izveide.lv/atsauksmes",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(reviewData),
+                }
+              );
+
+              if (response.ok) {
+                document.getElementById("reviewText").value = "";
+                rating = 0;
+                highlightStars(0);
+                fetchReviews(website); // Atjaunināt atsauksmju sarakstu pēc iesniegšanas
+              } else {
+                alert("Neizdevās iesniegt atsauksmi. Lūdzu, mēģiniet vēlreiz.");
+              }
+            } catch (error) {
+              console.error("Kļūda, iesniedzot atsauksmi:", error);
+            }
+          } else {
+            alert("Lūdzu, sniedziet vērtējumu un atsauksmi.");
+          }
+        });
+
+      // Iegūstiet atsauksmes lapas ielādēšanai konkrētai vietnei
+      fetchReviews(website).catch((error) =>
+        console.error("Kļūda, iegūstot atsauksmes:", error)
+      );
+    </script>
+  </body>
+</html>
